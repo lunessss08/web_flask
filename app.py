@@ -1,5 +1,5 @@
 from flask import Flask, render_template, redirect, url_for, request, flash
-from models import db, User, Product
+from models import db, User, Product, Category
 from flask_login import (
     LoginManager,
     login_user,
@@ -35,11 +35,17 @@ def load_user(user_id):
 
 
 # =========================
-# Create Database
+# Create Database & Default Categories
 # =========================
 
 with app.app_context():
     db.create_all()
+    if not Category.query.first():
+        # สร้างหมวดหมู่เริ่มต้น
+        db.session.add(Category(name="Electronics"))
+        db.session.add(Category(name="Books"))
+        db.session.add(Category(name="Services"))
+        db.session.commit()
 
 # =========================
 # Routes
@@ -65,7 +71,6 @@ def register():
 
         hashed_password = generate_password_hash(password)
         new_user = User(username=username, password=hashed_password)
-
         db.session.add(new_user)
         db.session.commit()
 
@@ -111,10 +116,16 @@ def dashboard():
     return render_template("dashboard.html", products=products)
 
 
-# ---------- View Products ----------
+# ---------- Products with Search ----------
 @app.route("/products")
 def products():
-    products = Product.query.all()
+    search = request.args.get("search")
+
+    if search:
+        products = Product.query.filter(Product.name.contains(search)).all()
+    else:
+        products = Product.query.all()
+
     return render_template("products.html", products=products)
 
 
@@ -129,19 +140,30 @@ def product_detail(id):
 @app.route("/add_product", methods=["GET", "POST"])
 @login_required
 def add_product():
+    categories = Category.query.all()
+
     if request.method == "POST":
         name = request.form["name"]
         price = float(request.form["price"])
         description = request.form["description"]
+        category_id = int(request.form["category_id"])
+        image = request.form["image"]  # ใช้ URL รูป
 
-        new_product = Product(name=name, price=price, description=description)
-        db.session.add(new_product)
+        product = Product(
+            name=name,
+            price=price,
+            description=description,
+            category_id=category_id,
+            image=image,
+        )
+
+        db.session.add(product)
         db.session.commit()
 
         flash("Product added successfully")
         return redirect(url_for("dashboard"))
 
-    return render_template("add_product.html")
+    return render_template("add_product.html", categories=categories)
 
 
 # ---------- Edit Product ----------
@@ -149,17 +171,20 @@ def add_product():
 @login_required
 def edit_product(id):
     product = Product.query.get_or_404(id)
+    categories = Category.query.all()
 
     if request.method == "POST":
         product.name = request.form["name"]
         product.price = float(request.form["price"])
         product.description = request.form["description"]
+        product.category_id = int(request.form["category_id"])
+        product.image = request.form["image"]
 
         db.session.commit()
         flash("Product updated successfully")
         return redirect(url_for("dashboard"))
 
-    return render_template("edit_product.html", product=product)
+    return render_template("edit_product.html", product=product, categories=categories)
 
 
 # ---------- Delete Product ----------
@@ -169,7 +194,6 @@ def delete_product(id):
     product = Product.query.get_or_404(id)
     db.session.delete(product)
     db.session.commit()
-
     flash("Product deleted successfully")
     return redirect(url_for("dashboard"))
 

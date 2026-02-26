@@ -1,12 +1,11 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 
-# สร้าง instance ของฐานข้อมูล
 db = SQLAlchemy()
 
 
 # =========================
-# User Model
+# User
 # =========================
 class User(UserMixin, db.Model):
     __tablename__ = "users"
@@ -15,12 +14,21 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
 
-    def __repr__(self):
-        return f"<User {self.username}>"
+
+# =========================
+# Category
+# =========================
+class Category(db.Model):
+    __tablename__ = "categories"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+
+    products = db.relationship("Product", backref="category", lazy=True)
 
 
 # =========================
-# Product Model
+# Product
 # =========================
 class Product(db.Model):
     __tablename__ = "products"
@@ -29,6 +37,6 @@ class Product(db.Model):
     name = db.Column(db.String(200), nullable=False)
     price = db.Column(db.Float, nullable=False)
     description = db.Column(db.Text)
+    image = db.Column(db.String(300))  # เก็บชื่อไฟล์รูป
 
-    def __repr__(self):
-        return f"<Product {self.name}>"
+    category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=False)
