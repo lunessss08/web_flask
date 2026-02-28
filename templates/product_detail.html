@@ -1,17 +1,70 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2>{{ product.name }}</h2>
+<div class="container mt-4">
 
-<div class="card shadow p-4">
-  <p>{{ product.description }}</p>
-  <h4 class="text-success">{{ product.price }} ฿</h4>
+  <div class="row">
+    
+    <!-- Product Image -->
+    <div class="col-md-6">
+      <div class="card shadow-sm">
+        {% if product.image %}
+          <img src="{{ url_for('static', filename='uploads/' + product.image) }}"
+               class="img-fluid rounded"
+               style="max-height:450px; object-fit:cover;">
+        {% else %}
+          <img src="https://via.placeholder.com/600x450?text=No+Image"
+               class="img-fluid rounded">
+        {% endif %}
+      </div>
+    </div>
 
-  {% if current_user.is_authenticated %}
-    <a href="/checkout/{{product.id}}" class="btn btn-warning">Buy Now</a>
-    <a href="/edit_product/{{product.id}}" class="btn btn-info">Edit</a>
-    <a href="/delete_product/{{product.id}}" class="btn btn-danger">Delete</a>
-  {% endif %}
+    <!-- Product Info -->
+    <div class="col-md-6">
+      <h2 class="fw-bold">{{ product.name }}</h2>
+
+      <hr>
+
+      <p class="text-muted fs-5">
+        {{ product.description }}
+      </p>
+
+      <h3 class="text-success fw-bold mb-4">
+        {{ product.price }} ฿
+      </h3>
+
+      {% if current_user.is_authenticated %}
+        <div class="d-flex gap-2 flex-wrap">
+
+          <a href="/checkout/{{product.id}}" 
+             class="btn btn-warning btn-lg">
+            🛒 Buy Now
+          </a>
+
+          <a href="/edit_product/{{product.id}}" 
+             class="btn btn-outline-info">
+            ✏️ Edit
+          </a>
+
+          <a href="/delete_product/{{product.id}}" 
+             class="btn btn-outline-danger"
+             onclick="return confirm('Are you sure you want to delete this product?');">
+            🗑 Delete
+          </a>
+
+        </div>
+      {% endif %}
+
+      <div class="mt-4">
+        <a href="/" class="btn btn-secondary">
+          ← Back to Products
+        </a>
+      </div>
+
+    </div>
+
+  </div>
+
 </div>
 
 {% endblock %}
