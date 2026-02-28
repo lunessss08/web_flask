@@ -1,3 +1,4 @@
+import os
 from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (
@@ -8,10 +9,20 @@ from flask_login import (
     login_required,
     current_user,
 )
+from werkzeug.utils import secure_filename
 from config import Config
+
+# ================= APP CONFIG =================
 
 app = Flask(__name__)
 app.config.from_object(Config)
+
+UPLOAD_FOLDER = "static/uploads"
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+# สร้างโฟลเดอร์ถ้ายังไม่มี
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
 db = SQLAlchemy(app)
 
@@ -32,6 +43,7 @@ class Product(db.Model):
     name = db.Column(db.String(200))
     price = db.Column(db.Float)
     description = db.Column(db.Text)
+    image = db.Column(db.String(300))  # เพิ่ม field รูป
 
 
 class Order(db.Model):
@@ -58,7 +70,8 @@ def index():
 def register():
     if request.method == "POST":
         user = User(
-            username=request.form["username"], password=request.form["password"]
+            username=request.form["username"],
+            password=request.form["password"],
         )
         db.session.add(user)
         db.session.commit()
@@ -97,52 +110,109 @@ def product_detail(id):
     return render_template("product_detail.html", product=product)
 
 
+# ================= ADD PRODUCT =================
+
+
 @app.route("/add_product", methods=["GET", "POST"])
 @login_required
 def add_product():
     if request.method == "POST":
+
+        file = request.files.get("image")
+        filename = None
+
+        if file and file.filename != "":
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+
         product = Product(
             name=request.form["name"],
             price=request.form["price"],
             description=request.form["description"],
+            image=filename,
         )
+
         db.session.add(product)
         db.session.commit()
+
+        flash("Product added successfully!")
         return redirect(url_for("products"))
+
     return render_template("add_product.html")
+
+
+# ================= EDIT PRODUCT =================
 
 
 @app.route("/edit_product/<int:id>", methods=["GET", "POST"])
 @login_required
 def edit_product(id):
     product = Product.query.get_or_404(id)
+
     if request.method == "POST":
         product.name = request.form["name"]
         product.price = request.form["price"]
         product.description = request.form["description"]
+
+        file = request.files.get("image")
+
+        if file and file.filename != "":
+            # ลบรูปเก่า
+            if product.image:
+                old_path = os.path.join(app.config["UPLOAD_FOLDER"], product.image)
+                if os.path.exists(old_path):
+                    os.remove(old_path)
+
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+            product.image = filename
+
         db.session.commit()
+        flash("Product updated successfully!")
         return redirect(url_for("products"))
+
     return render_template("edit_product.html", product=product)
+
+
+# ================= DELETE PRODUCT =================
 
 
 @app.route("/delete_product/<int:id>")
 @login_required
 def delete_product(id):
     product = Product.query.get_or_404(id)
+
+    # ลบรูปในโฟลเดอร์ด้วย
+    if product.image:
+        path = os.path.join(app.config["UPLOAD_FOLDER"], product.image)
+        if os.path.exists(path):
+            os.remove(path)
+
     db.session.delete(product)
     db.session.commit()
+
+    flash("Product deleted successfully!")
     return redirect(url_for("products"))
+
+
+# ================= CHECKOUT =================
 
 
 @app.route("/checkout/<int:id>")
 @login_required
 def checkout(id):
     product = Product.query.get_or_404(id)
+
     order = Order(
-        user_id=current_user.id, product_name=product.name, total_price=product.price
+        user_id=current_user.id,
+        product_name=product.name,
+        total_price=product.price,
     )
+
     db.session.add(order)
     db.session.commit()
+
+    flash("Order placed successfully!")
     return redirect(url_for("orders"))
 
 
