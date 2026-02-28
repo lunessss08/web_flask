@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>My Orders</h2>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Product</th>
+      <th>Price</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for order in orders %}
+    <tr>
+      <td>{{ order.product_name }}</td>
+      <td>{{ order.total_price }} ฿</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}
