@@ -1,26 +1,26 @@
-# SiShop - Flask Online Store
+# SiShop - Online Shop Web Application
 
-## Features
-- User Authentication
-- Product Management
-- Order System
-- SQLite Database
-- Bootstrap 5 UI
+นี่คือโปรเจ็ค **SiShop** เว็บขายสินค้าออนไลน์ที่สร้างด้วย **Flask** + **Bootstrap** + **SQLite**  
 
-## Installation
+ผู้ใช้งานสามารถ:  
+- ลงทะเบียน / เข้าสู่ระบบ  
+- ดูรายการสินค้า  
+- เพิ่ม / แก้ไข / ลบสินค้า (สำหรับผู้ใช้งานที่ล็อกอิน)  
+- เพิ่มสินค้าลงฐานข้อมูลพร้อมรูปภาพ  
+- สั่งซื้อสินค้า (Checkout) และดู Order ของตัวเอง  
 
-1. Clone project
-2. Create virtual environment
+---
 
-python -m venv venv
-source venv/bin/activate  (Mac/Linux)
-venv\Scripts\activate     (Windows)
+## 💻 เทคโนโลยีที่ใช้
 
-3. Install dependencies
-pip install -r requirements.txt
+- Python 3.13  
+- Flask  
+- Flask-Login (ระบบล็อกอิน)  
+- Flask-SQLAlchemy (ฐานข้อมูล SQLite)  
+- Bootstrap 5 (CSS Framework)  
+- HTML / CSS / JS  
+- SQLite (ฐานข้อมูล)
 
-4. Run
-python app.py
+---
 
-5. Open browser
-http://127.0.0.1:5000
+## 📂 โครงสร้างโปรเจ็ค
