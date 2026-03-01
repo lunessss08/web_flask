@@ -36,3 +36,24 @@ app = Flask(__name__)
 app.config.from_object(Config)
 UPLOAD_FOLDER = "static/uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+2. Models
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(100), unique=True)
+    password = db.Column(db.String(100))
+
+	•	User: เก็บผู้ใช้งาน
+	•	Product: เก็บสินค้า (รวมชื่อไฟล์รูปภาพ)
+	•	Order: เก็บ order ของผู้ใช้
+
+4. การอัปโหลดรูปสินค้า
+	•	ใช้ request.files.get("image")
+	•	ใช้ secure_filename() ป้องกันชื่อไฟล์ไม่ปลอดภัย
+	•	เซฟไฟล์ลง static/uploads
+	•	บันทึกชื่อไฟล์ลงฐานข้อมูล Product.image
+
+5. การใช้งาน Flask-Login
+	•	login_user(user) → เข้าสู่ระบบ
+	•	logout_user() → ออกจากระบบ
+	•	@login_required → route สำหรับผู้ใช้งานที่ล็อกอินเท่านั้น
