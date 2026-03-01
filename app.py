@@ -20,7 +20,6 @@ app.config.from_object(Config)
 UPLOAD_FOLDER = "static/uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
-# สร้างโฟลเดอร์ถ้ายังไม่มี
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
@@ -43,7 +42,7 @@ class Product(db.Model):
     name = db.Column(db.String(200))
     price = db.Column(db.Float)
     description = db.Column(db.Text)
-    image = db.Column(db.String(300))  # เพิ่ม field รูป
+    image = db.Column(db.String(300))
 
 
 class Order(db.Model):
@@ -71,8 +70,7 @@ def home():
 def register():
     if request.method == "POST":
         user = User(
-            username=request.form["username"],
-            password=request.form["password"],
+            username=request.form["username"], password=request.form["password"]
         )
         db.session.add(user)
         db.session.commit()
@@ -87,7 +85,8 @@ def login():
         user = User.query.filter_by(username=request.form["username"]).first()
         if user and user.password == request.form["password"]:
             login_user(user)
-            return redirect(url_for("index"))
+            flash(f"Welcome, {user.username}!")
+            return redirect(url_for("home"))
         flash("Invalid credentials")
     return render_template("login.html")
 
@@ -96,7 +95,8 @@ def login():
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for("index"))
+    flash("Logged out successfully!")
+    return redirect(url_for("home"))
 
 
 @app.route("/products")
@@ -118,10 +118,8 @@ def product_detail(id):
 @login_required
 def add_product():
     if request.method == "POST":
-
         file = request.files.get("image")
         filename = None
-
         if file and file.filename != "":
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
@@ -132,13 +130,10 @@ def add_product():
             description=request.form["description"],
             image=filename,
         )
-
         db.session.add(product)
         db.session.commit()
-
         flash("Product added successfully!")
         return redirect(url_for("products"))
-
     return render_template("add_product.html")
 
 
@@ -149,21 +144,18 @@ def add_product():
 @login_required
 def edit_product(id):
     product = Product.query.get_or_404(id)
-
     if request.method == "POST":
         product.name = request.form["name"]
         product.price = request.form["price"]
         product.description = request.form["description"]
 
         file = request.files.get("image")
-
         if file and file.filename != "":
             # ลบรูปเก่า
             if product.image:
                 old_path = os.path.join(app.config["UPLOAD_FOLDER"], product.image)
                 if os.path.exists(old_path):
                     os.remove(old_path)
-
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
             product.image = filename
@@ -182,8 +174,6 @@ def edit_product(id):
 @login_required
 def delete_product(id):
     product = Product.query.get_or_404(id)
-
-    # ลบรูปในโฟลเดอร์ด้วย
     if product.image:
         path = os.path.join(app.config["UPLOAD_FOLDER"], product.image)
         if os.path.exists(path):
@@ -191,7 +181,6 @@ def delete_product(id):
 
     db.session.delete(product)
     db.session.commit()
-
     flash("Product deleted successfully!")
     return redirect(url_for("products"))
 
@@ -203,16 +192,11 @@ def delete_product(id):
 @login_required
 def checkout(id):
     product = Product.query.get_or_404(id)
-
     order = Order(
-        user_id=current_user.id,
-        product_name=product.name,
-        total_price=product.price,
+        user_id=current_user.id, product_name=product.name, total_price=product.price
     )
-
     db.session.add(order)
     db.session.commit()
-
     flash("Order placed successfully!")
     return redirect(url_for("orders"))
 
