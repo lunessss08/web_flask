@@ -24,3 +24,15 @@
 ---
 
 ## 📂 โครงสร้างโปรเจ็ค
+
+---
+
+## 📝 อธิบายโค้ดหลัก (app.py)
+
+### 1. การตั้งค่า Flask
+
+```python
+app = Flask(__name__)
+app.config.from_object(Config)
+UPLOAD_FOLDER = "static/uploads"
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
